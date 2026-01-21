@@ -49,38 +49,38 @@ export const useRegisterMutation = () => {
 
 ### Authentication
 
-- [POST /auth/register](./auth/register.md)
-- [POST /auth/login](./auth/login.md)
-- [POST /auth/logout](./auth/logout.md)
-- [POST /auth/forgot-password](./auth/forgot-password.md)
-- [POST /auth/reset-password](./auth/reset-password.md)
+- [POST /auth/register](./auth-register.md)
+- [POST /auth/login](./auth-login.md)
+- [POST /auth/logout](./auth-logout.md)
+- [POST /auth/forgot-password](./auth-forgot-password.md)
+- [POST /auth/reset-password](./auth-reset-password.md)
 
 ### Products & Reservations
 
-- [POST /reservations](./reservations/create.md)
-- [DELETE /reservations/:id](./reservations/delete.md)
+- [POST /reservations](./reservation-create.md)
+- [DELETE /reservations/:id](./reservation-delete.md)
 
 ### Transport
 
-- [POST /transport/calculer](./transport/calculate.md)
-- [POST /transport](./transport/create.md)
+- [POST /transport/calculer](./transport-calculate.md)
+- [POST /transport](./transport-create.md)
 
 ### Quotes
 
-- [POST /devis](./devis/create.md)
+- [POST /devis](./devis-create.md)
 
 ### Services
 
-- [POST /accompagnement/demande](./accompagnement/request.md)
+- [POST /accompagnement/demande](./accompagnement-request.md)
 
 ### Profile
 
-- [PUT /profil](./profile/update.md)
+- [PUT /profil](./profile-update.md)
 
 ### Messaging
 
-- [POST /messages](./messages/send.md)
+- [POST /messages](./messages-send.md)
 
 ### Public Contact
 
-- [POST /contact](./contact/submit.md)
+- [POST /contact](./contact-submit.md)

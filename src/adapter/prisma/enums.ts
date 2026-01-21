@@ -52,7 +52,7 @@ export type devis_type = (typeof devis_type)[keyof typeof devis_type]
 
 export const pays_enum = {
   Chine: 'Chine',
-  Duba_: 'Dubaï'
+  Duba_: 'Duba_'
 } as const
 
 export type pays_enum = (typeof pays_enum)[keyof typeof pays_enum]
