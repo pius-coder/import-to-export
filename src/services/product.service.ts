@@ -149,6 +149,64 @@ export class ProductService extends BaseService {
   }
 
   /**
+   * Get all products with filters and pagination
+   */
+  async getAllProducts(params: {
+    page?: number;
+    limit?: number;
+    categorie?: string;
+    pays_origine?: string;
+    prix_min?: number;
+    prix_max?: number;
+  }): Promise<{ products: produits[]; total: number }> {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        categorie,
+        pays_origine,
+        prix_min,
+        prix_max,
+      } = params;
+
+      const skip = (page - 1) * limit;
+
+      const where: any = {
+        disponible: true,
+      };
+
+      if (categorie) {
+        where.categorie_id = categorie;
+      }
+
+      if (pays_origine) {
+        where.pays_origine = pays_origine as pays_enum;
+      }
+
+      if (prix_min !== undefined || prix_max !== undefined) {
+        where.prix = {};
+        if (prix_min !== undefined) where.prix.gte = parseFloat(prix_min.toString());
+        if (prix_max !== undefined) where.prix.lte = parseFloat(prix_max.toString());
+      }
+
+      const [products, total] = await Promise.all([
+        this.prisma.produits.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { created_at: "desc" },
+          include: { produits_images: true },
+        }),
+        this.prisma.produits.count({ where }),
+      ]);
+
+      return { products, total };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /**
    * Increment view count
    */
   async incrementViewCount(id: string): Promise<void> {
