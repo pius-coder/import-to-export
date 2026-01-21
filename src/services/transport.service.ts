@@ -127,7 +127,7 @@ export class TransportService extends BaseService {
   /**
    * Get transport by ID
    */
-  async getTransportById(id: string): Promise<transports | null> {
+  async getTransportById(id: string): Promise<any | null> {
     try {
       return await this.prisma.transports.findUnique({
         where: { id },

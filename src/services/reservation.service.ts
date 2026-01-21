@@ -15,7 +15,7 @@ export class ReservationService extends BaseService {
   /**
    * Get reservation by ID
    */
-  async getReservationById(id: string): Promise<reservations | null> {
+  async getReservationById(id: string): Promise<any | null> {
     try {
       return await this.prisma.reservations.findUnique({
         where: { id },
