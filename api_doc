@@ -1,0 +1,890 @@
+API ENDPOINTS - SITE IMPORT-EXPORT
+
+BASE URL
+https://api.votresite.com/v1
+
+AUTHENTIFICATION
+
+POST /auth/register
+Description: Inscription d'un nouvel utilisateur
+Body:
+{
+  "nom": "string",
+  "prenom": "string",
+  "email": "string",
+  "telephone": "string",
+  "pays": "string",
+  "mot_de_passe": "string"
+}
+Response 201:
+{
+  "success": true,
+  "message": "Compte créé avec succès",
+  "user": {
+    "id": "string",
+    "email": "string",
+    "nom": "string",
+    "prenom": "string",
+    "role": "client"
+  },
+  "token": "string"
+}
+
+POST /auth/login
+Description: Connexion utilisateur
+Body:
+{
+  "email": "string",
+  "mot_de_passe": "string"
+}
+Response 200:
+{
+  "success": true,
+  "token": "string",
+  "user": {
+    "id": "string",
+    "email": "string",
+    "nom": "string",
+    "role": "client" ou "admin"
+  }
+}
+
+POST /auth/logout
+Description: Déconnexion
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "message": "Déconnexion réussie"
+}
+
+POST /auth/refresh-token
+Description: Renouveler le token
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "token": "string"
+}
+
+POST /auth/forgot-password
+Description: Demande de réinitialisation de mot de passe
+Body:
+{
+  "email": "string"
+}
+Response 200:
+{
+  "success": true,
+  "message": "Email de réinitialisation envoyé"
+}
+
+POST /auth/reset-password
+Description: Réinitialiser le mot de passe
+Body:
+{
+  "token": "string",
+  "nouveau_mot_de_passe": "string"
+}
+Response 200:
+{
+  "success": true,
+  "message": "Mot de passe réinitialisé"
+}
+
+ENDPOINTS CÔTÉ CLIENT
+
+PRODUITS
+
+GET /produits
+Description: Liste tous les produits
+Query params:
+  - categorie: string (optionnel)
+  - pays_origine: string (optionnel)
+  - prix_min: number (optionnel)
+  - prix_max: number (optionnel)
+  - page: number (défaut: 1)
+  - limit: number (défaut: 20)
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "nom": "string",
+      "description": "string",
+      "prix": number,
+      "devise": "string",
+      "categorie": "string",
+      "pays_origine": "string",
+      "quantite_minimum": number,
+      "delai_livraison": "string",
+      "images": ["url1", "url2"],
+      "disponible": boolean
+    }
+  ],
+  "pagination": {
+    "page": number,
+    "limit": number,
+    "total": number,
+    "pages": number
+  }
+}
+
+GET /produits/:id
+Description: Détails d'un produit
+Response 200:
+{
+  "success": true,
+  "data": {
+    "id": "string",
+    "nom": "string",
+    "description": "string",
+    "prix": number,
+    "devise": "string",
+    "categorie": "string",
+    "pays_origine": "string",
+    "quantite_minimum": number,
+    "delai_livraison": "string",
+    "images": ["url1", "url2"],
+    "caracteristiques": {},
+    "disponible": boolean
+  }
+}
+
+GET /categories
+Description: Liste toutes les catégories
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "nom": "string",
+      "slug": "string",
+      "nombre_produits": number
+    }
+  ]
+}
+
+RÉSERVATIONS
+
+POST /reservations
+Description: Créer une réservation de produit
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "produit_id": "string",
+  "quantite": number,
+  "notes": "string"
+}
+Response 201:
+{
+  "success": true,
+  "message": "Réservation créée",
+  "data": {
+    "id": "string",
+    "numero_reservation": "string",
+    "produit": {},
+    "quantite": number,
+    "statut": "en_attente",
+    "date_creation": "timestamp"
+  }
+}
+
+GET /reservations
+Description: Liste des réservations du client
+Headers: Authorization: Bearer {token}
+Query params:
+  - statut: string (optionnel)
+  - page: number
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "numero_reservation": "string",
+      "produit": {},
+      "quantite": number,
+      "statut": "string",
+      "date_creation": "timestamp"
+    }
+  ]
+}
+
+GET /reservations/:id
+Description: Détails d'une réservation
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": {
+    "id": "string",
+    "numero_reservation": "string",
+    "produit": {},
+    "quantite": number,
+    "prix_total": number,
+    "statut": "string",
+    "notes": "string",
+    "date_creation": "timestamp"
+  }
+}
+
+DELETE /reservations/:id
+Description: Annuler une réservation
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "message": "Réservation annulée"
+}
+
+TRANSPORT
+
+POST /transport/calculer
+Description: Calculer le coût de transport
+Body:
+{
+  "pays_depart": "string",
+  "pays_destination": "string",
+  "type_marchandise": "string",
+  "poids": number,
+  "volume": number
+}
+Response 200:
+{
+  "success": true,
+  "data": {
+    "prix_maritime": number,
+    "prix_aerien": number,
+    "delai_maritime": "string",
+    "delai_aerien": "string",
+    "devise": "string"
+  }
+}
+
+POST /transport
+Description: Créer une demande de transport
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "pays_depart": "string",
+  "pays_destination": "string",
+  "type_marchandise": "string",
+  "poids": number,
+  "volume": number,
+  "mode_transport": "maritime" ou "aerien",
+  "description": "string"
+}
+Response 201:
+{
+  "success": true,
+  "message": "Demande de transport créée",
+  "data": {
+    "id": "string",
+    "numero_transport": "string",
+    "statut": "en_attente",
+    "prix_estime": number,
+    "date_creation": "timestamp"
+  }
+}
+
+GET /transport
+Description: Liste des transports du client
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "numero_transport": "string",
+      "pays_depart": "string",
+      "pays_destination": "string",
+      "statut": "string",
+      "date_creation": "timestamp"
+    }
+  ]
+}
+
+GET /transport/:id
+Description: Détails et suivi d'un transport
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": {
+    "id": "string",
+    "numero_transport": "string",
+    "pays_depart": "string",
+    "pays_destination": "string",
+    "type_marchandise": "string",
+    "poids": number,
+    "volume": number,
+    "mode_transport": "string",
+    "statut": "string",
+    "prix": number,
+    "timeline": [
+      {
+        "etape": "string",
+        "date": "timestamp",
+        "description": "string"
+      }
+    ],
+    "documents": [
+      {
+        "nom": "string",
+        "url": "string",
+        "type": "string"
+      }
+    ]
+  }
+}
+
+DEVIS
+
+POST /devis
+Description: Demander un devis
+Body:
+{
+  "type_service": "achat" ou "transport" ou "accompagnement",
+  "nom": "string",
+  "email": "string",
+  "telephone": "string",
+  "pays": "string",
+  "details": "string"
+}
+Response 201:
+{
+  "success": true,
+  "message": "Devis envoyé, vous recevrez une réponse sous 24h",
+  "data": {
+    "id": "string",
+    "numero_devis": "string",
+    "date_creation": "timestamp"
+  }
+}
+
+GET /devis
+Description: Liste des devis du client
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "numero_devis": "string",
+      "type_service": "string",
+      "statut": "string",
+      "date_creation": "timestamp"
+    }
+  ]
+}
+
+GET /devis/:id
+Description: Détails d'un devis
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": {
+    "id": "string",
+    "numero_devis": "string",
+    "type_service": "string",
+    "details": "string",
+    "statut": "string",
+    "reponse": "string",
+    "montant": number,
+    "date_creation": "timestamp",
+    "date_reponse": "timestamp"
+  }
+}
+
+ACCOMPAGNEMENT
+
+GET /accompagnement/formules
+Description: Liste des formules d'accompagnement
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "nom": "Basic",
+      "description": "string",
+      "services_inclus": ["string"],
+      "prix": number,
+      "devise": "string"
+    }
+  ]
+}
+
+POST /accompagnement/demande
+Description: Demander un accompagnement
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "formule_id": "string",
+  "description_projet": "string",
+  "budget_estime": number
+}
+Response 201:
+{
+  "success": true,
+  "message": "Demande d'accompagnement envoyée",
+  "data": {
+    "id": "string",
+    "numero_demande": "string",
+    "statut": "en_attente"
+  }
+}
+
+PROFIL CLIENT
+
+GET /profil
+Description: Informations du profil client
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": {
+    "id": "string",
+    "nom": "string",
+    "prenom": "string",
+    "email": "string",
+    "telephone": "string",
+    "pays": "string",
+    "adresse": "string",
+    "date_inscription": "timestamp"
+  }
+}
+
+PUT /profil
+Description: Modifier le profil
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "nom": "string",
+  "prenom": "string",
+  "telephone": "string",
+  "pays": "string",
+  "adresse": "string"
+}
+Response 200:
+{
+  "success": true,
+  "message": "Profil mis à jour",
+  "data": {}
+}
+
+MESSAGES
+
+GET /messages
+Description: Liste des conversations
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "sujet": "string",
+      "dernier_message": "string",
+      "non_lu": boolean,
+      "date": "timestamp"
+    }
+  ]
+}
+
+GET /messages/:id
+Description: Détails d'une conversation
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": {
+    "id": "string",
+    "sujet": "string",
+    "messages": [
+      {
+        "id": "string",
+        "expediteur": "string",
+        "contenu": "string",
+        "date": "timestamp",
+        "lu": boolean
+      }
+    ]
+  }
+}
+
+POST /messages
+Description: Envoyer un message
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "conversation_id": "string",
+  "contenu": "string"
+}
+Response 201:
+{
+  "success": true,
+  "data": {
+    "id": "string",
+    "contenu": "string",
+    "date": "timestamp"
+  }
+}
+
+CONTACT
+
+POST /contact
+Description: Formulaire de contact public
+Body:
+{
+  "nom": "string",
+  "email": "string",
+  "telephone": "string",
+  "sujet": "string",
+  "message": "string"
+}
+Response 200:
+{
+  "success": true,
+  "message": "Message envoyé, nous vous répondrons rapidement"
+}
+
+ENDPOINTS CÔTÉ ADMIN
+
+AUTHENTIFICATION ADMIN
+
+POST /admin/auth/login
+Description: Connexion administrateur
+Body:
+{
+  "email": "string",
+  "mot_de_passe": "string"
+}
+Response 200:
+{
+  "success": true,
+  "token": "string",
+  "admin": {
+    "id": "string",
+    "email": "string",
+    "nom": "string",
+    "role": "admin"
+  }
+}
+
+DASHBOARD
+
+GET /admin/dashboard/stats
+Description: Statistiques du tableau de bord
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": {
+    "nouvelles_reservations": number,
+    "transports_en_cours": number,
+    "devis_en_attente": number,
+    "revenus_mois": number,
+    "nombre_clients": number
+  }
+}
+
+GESTION PRODUITS
+
+GET /admin/produits
+Description: Liste tous les produits (admin)
+Headers: Authorization: Bearer {token}
+Query params:
+  - page: number
+  - limit: number
+  - statut: string
+Response 200:
+{
+  "success": true,
+  "data": [],
+  "pagination": {}
+}
+
+POST /admin/produits
+Description: Créer un nouveau produit
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "nom": "string",
+  "description": "string",
+  "prix": number,
+  "devise": "string",
+  "categorie_id": "string",
+  "pays_origine": "string",
+  "quantite_minimum": number,
+  "delai_livraison": "string",
+  "caracteristiques": {},
+  "images": ["url"]
+}
+Response 201:
+{
+  "success": true,
+  "message": "Produit créé",
+  "data": {}
+}
+
+PUT /admin/produits/:id
+Description: Modifier un produit
+Headers: Authorization: Bearer {token}
+Body: {mêmes champs que POST}
+Response 200:
+{
+  "success": true,
+  "message": "Produit mis à jour"
+}
+
+DELETE /admin/produits/:id
+Description: Supprimer un produit
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "message": "Produit supprimé"
+}
+
+GESTION RÉSERVATIONS
+
+GET /admin/reservations
+Description: Liste toutes les réservations
+Headers: Authorization: Bearer {token}
+Query params:
+  - statut: string
+  - date_debut: date
+  - date_fin: date
+  - page: number
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "numero_reservation": "string",
+      "client": {},
+      "produit": {},
+      "quantite": number,
+      "statut": "string",
+      "date_creation": "timestamp"
+    }
+  ]
+}
+
+PUT /admin/reservations/:id/statut
+Description: Changer le statut d'une réservation
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "statut": "confirmee" ou "annulee" ou "traitee",
+  "notes": "string"
+}
+Response 200:
+{
+  "success": true,
+  "message": "Statut mis à jour"
+}
+
+GESTION TRANSPORTS
+
+GET /admin/transport
+Description: Liste tous les transports
+Headers: Authorization: Bearer {token}
+Query params:
+  - statut: string
+  - page: number
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "numero_transport": "string",
+      "client": {},
+      "pays_depart": "string",
+      "pays_destination": "string",
+      "statut": "string",
+      "date_creation": "timestamp"
+    }
+  ]
+}
+
+PUT /admin/transport/:id/statut
+Description: Mettre à jour le statut du transport
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "statut": "en_attente" ou "marchandise_recue" ou "en_transit" ou "arrive" ou "livre",
+  "description": "string"
+}
+Response 200:
+{
+  "success": true,
+  "message": "Statut mis à jour"
+}
+
+POST /admin/transport/:id/document
+Description: Ajouter un document au transport
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "nom": "string",
+  "type": "string",
+  "url": "string"
+}
+Response 201:
+{
+  "success": true,
+  "message": "Document ajouté"
+}
+
+GESTION DEVIS
+
+GET /admin/devis
+Description: Liste tous les devis
+Headers: Authorization: Bearer {token}
+Query params:
+  - statut: string
+  - page: number
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "numero_devis": "string",
+      "client": {},
+      "type_service": "string",
+      "statut": "string",
+      "date_creation": "timestamp"
+    }
+  ]
+}
+
+PUT /admin/devis/:id/repondre
+Description: Répondre à un devis
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "reponse": "string",
+  "montant": number,
+  "devise": "string",
+  "delai": "string"
+}
+Response 200:
+{
+  "success": true,
+  "message": "Réponse envoyée au client"
+}
+
+GESTION CLIENTS
+
+GET /admin/clients
+Description: Liste tous les clients
+Headers: Authorization: Bearer {token}
+Query params:
+  - page: number
+  - recherche: string
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "nom": "string",
+      "prenom": "string",
+      "email": "string",
+      "telephone": "string",
+      "pays": "string",
+      "date_inscription": "timestamp",
+      "nombre_commandes": number
+    }
+  ]
+}
+
+GET /admin/clients/:id
+Description: Détails d'un client
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": {
+    "informations": {},
+    "reservations": [],
+    "transports": [],
+    "devis": []
+  }
+}
+
+GESTION MESSAGES
+
+GET /admin/messages
+Description: Liste toutes les conversations
+Headers: Authorization: Bearer {token}
+Response 200:
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "client": {},
+      "sujet": "string",
+      "dernier_message": "string",
+      "non_lu": boolean,
+      "date": "timestamp"
+    }
+  ]
+}
+
+POST /admin/messages/:conversation_id
+Description: Répondre à un client
+Headers: Authorization: Bearer {token}
+Body:
+{
+  "contenu": "string"
+}
+Response 201:
+{
+  "success": true,
+  "message": "Message envoyé"
+}
+
+CODES D'ERREUR HTTP
+
+200 OK - Requête réussie
+201 Created - Ressource créée
+400 Bad Request - Données invalides
+401 Unauthorized - Non authentifié
+403 Forbidden - Accès refusé
+404 Not Found - Ressource introuvable
+409 Conflict - Conflit (ex: email déjà utilisé)
+422 Unprocessable Entity - Validation échouée
+500 Internal Server Error - Erreur serveur
+
+FORMAT DE RÉPONSE D'ERREUR
+
+{
+  "success": false,
+  "error": {
+    "code": "string",
+    "message": "string",
+    "details": {}
+  }
+}
+
+NOTES IMPORTANTES
+
+Tous les endpoints admin nécessitent un token avec role admin
+Les tokens expirent après 24h
+Utiliser refresh-token pour renouveler
+Les dates sont au format ISO 8601
+Les montants sont en nombre décimal
+Les fichiers sont uploadés séparément puis URL fournie

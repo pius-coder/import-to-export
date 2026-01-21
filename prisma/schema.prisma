@@ -1,0 +1,522 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/adapter/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model categories {
+  id          String     @id @db.VarChar(36)
+  nom         String     @db.VarChar(100)
+  slug        String     @unique @db.VarChar(100)
+  description String?
+  image_url   String?    @db.VarChar(500)
+  ordre       Int?       @default(0)
+  actif       Boolean?   @default(true)
+  created_at  DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamp(6)
+  produits    produits[]
+
+  @@index([actif], map: "idx_categories_actif")
+  @@index([slug], map: "idx_categories_slug")
+}
+
+model contacts {
+  id              String    @id @db.VarChar(36)
+  nom             String    @db.VarChar(100)
+  email           String    @db.VarChar(255)
+  telephone       String?   @db.VarChar(20)
+  sujet           String    @db.VarChar(255)
+  message         String
+  ip_address      String?   @db.VarChar(45)
+  traite          Boolean?  @default(false)
+  traite_par      String?   @db.VarChar(36)
+  date_traitement DateTime? @db.Timestamp(6)
+  reponse         String?
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  users           users?    @relation(fields: [traite_par], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_contacts_created")
+  @@index([traite], map: "idx_contacts_traite")
+}
+
+model conversations {
+  id                                   String               @id @db.VarChar(36)
+  user_id                              String               @db.VarChar(36)
+  sujet                                String               @db.VarChar(255)
+  statut                               conversation_statut? @default(ouvert)
+  priorite                             priorite?            @default(normale)
+  derniere_activite                    DateTime?            @default(now()) @db.Timestamp(6)
+  assigne_a                            String?              @db.VarChar(36)
+  created_at                           DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at                           DateTime?            @default(now()) @db.Timestamp(6)
+  users_conversations_assigne_aTousers users?               @relation("conversations_assigne_aTousers", fields: [assigne_a], references: [id], onUpdate: NoAction)
+  users_conversations_user_idTousers   users                @relation("conversations_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  messages                             messages[]
+
+  @@index([derniere_activite], map: "idx_conversations_derniere_activite")
+  @@index([statut], map: "idx_conversations_statut")
+  @@index([user_id], map: "idx_conversations_user")
+}
+
+model demandes_accompagnement {
+  id                                             String                         @id @db.VarChar(36)
+  numero_demande                                 String                         @unique @db.VarChar(50)
+  user_id                                        String                         @db.VarChar(36)
+  formule_id                                     String?                        @db.VarChar(36)
+  description_projet                             String
+  budget_estime                                  Decimal?                       @db.Decimal(10, 2)
+  devise                                         String?                        @default("USD") @db.VarChar(3)
+  statut                                         demande_accompagnement_statut? @default(en_attente)
+  notes_admin                                    String?
+  date_debut                                     DateTime?                      @db.Timestamp(6)
+  date_fin                                       DateTime?                      @db.Timestamp(6)
+  assigne_a                                      String?                        @db.VarChar(36)
+  created_at                                     DateTime?                      @default(now()) @db.Timestamp(6)
+  updated_at                                     DateTime?                      @default(now()) @db.Timestamp(6)
+  users_demandes_accompagnement_assigne_aTousers users?                         @relation("demandes_accompagnement_assigne_aTousers", fields: [assigne_a], references: [id], onUpdate: NoAction)
+  formules_accompagnement                        formules_accompagnement?       @relation(fields: [formule_id], references: [id], onUpdate: NoAction)
+  users_demandes_accompagnement_user_idTousers   users                          @relation("demandes_accompagnement_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_demandes_accompagnement_created")
+  @@index([numero_demande], map: "idx_demandes_accompagnement_numero")
+  @@index([statut], map: "idx_demandes_accompagnement_statut")
+  @@index([user_id], map: "idx_demandes_accompagnement_user")
+}
+
+model devis {
+  id                            String        @id @db.VarChar(36)
+  numero_devis                  String        @unique @db.VarChar(50)
+  user_id                       String?       @db.VarChar(36)
+  type_service                  devis_type
+  nom                           String        @db.VarChar(100)
+  email                         String        @db.VarChar(255)
+  telephone                     String        @db.VarChar(20)
+  pays                          String        @db.VarChar(100)
+  details                       String
+  statut                        devis_statut? @default(en_attente)
+  reponse                       String?
+  montant                       Decimal?      @db.Decimal(10, 2)
+  devise                        String?       @default("USD") @db.VarChar(3)
+  delai                         String?       @db.VarChar(100)
+  valide_jusque                 DateTime?     @db.Timestamp(6)
+  date_reponse                  DateTime?     @db.Timestamp(6)
+  traite_par                    String?       @db.VarChar(36)
+  created_at                    DateTime?     @default(now()) @db.Timestamp(6)
+  updated_at                    DateTime?     @default(now()) @db.Timestamp(6)
+  users_devis_traite_parTousers users?        @relation("devis_traite_parTousers", fields: [traite_par], references: [id], onUpdate: NoAction)
+  users_devis_user_idTousers    users?        @relation("devis_user_idTousers", fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_devis_created")
+  @@index([numero_devis], map: "idx_devis_numero")
+  @@index([statut], map: "idx_devis_statut")
+  @@index([type_service], map: "idx_devis_type")
+  @@index([user_id], map: "idx_devis_user")
+}
+
+model formules_accompagnement {
+  id                      String                    @id @db.VarChar(36)
+  nom                     String                    @db.VarChar(100)
+  slug                    String                    @unique @db.VarChar(100)
+  description             String?
+  services_inclus         Json?
+  prix                    Decimal?                  @db.Decimal(10, 2)
+  devise                  String?                   @default("USD") @db.VarChar(3)
+  duree                   String?                   @db.VarChar(100)
+  ordre                   Int?                      @default(0)
+  actif                   Boolean?                  @default(true)
+  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  demandes_accompagnement demandes_accompagnement[]
+
+  @@index([actif], map: "idx_formules_accompagnement_actif")
+  @@index([slug], map: "idx_formules_accompagnement_slug")
+}
+
+model logs_activite {
+  id            String    @id @db.VarChar(36)
+  user_id       String?   @db.VarChar(36)
+  type_activite String    @db.VarChar(100)
+  description   String?
+  entite_type   String?   @db.VarChar(50)
+  entite_id     String?   @db.VarChar(36)
+  ip_address    String?   @db.VarChar(45)
+  user_agent    String?
+  data          Json?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  users         users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_logs_activite_created")
+  @@index([entite_type, entite_id], map: "idx_logs_activite_entite")
+  @@index([type_activite], map: "idx_logs_activite_type")
+  @@index([user_id], map: "idx_logs_activite_user")
+}
+
+model messages {
+  id                String        @id @db.VarChar(36)
+  conversation_id   String        @db.VarChar(36)
+  expediteur_id     String        @db.VarChar(36)
+  contenu           String
+  est_admin         Boolean?      @default(false)
+  lu                Boolean?      @default(false)
+  date_lecture      DateTime?     @db.Timestamp(6)
+  fichiers_attaches Json?
+  created_at        DateTime?     @default(now()) @db.Timestamp(6)
+  conversations     conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users             users         @relation(fields: [expediteur_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([conversation_id], map: "idx_messages_conversation")
+  @@index([conversation_id, created_at], map: "idx_messages_conversation_date")
+  @@index([created_at], map: "idx_messages_created")
+  @@index([expediteur_id], map: "idx_messages_expediteur")
+  @@index([lu], map: "idx_messages_lu")
+}
+
+model notifications {
+  id           String    @id @db.VarChar(36)
+  user_id      String    @db.VarChar(36)
+  type         String    @db.VarChar(50)
+  titre        String    @db.VarChar(255)
+  message      String
+  lien         String?   @db.VarChar(500)
+  lu           Boolean?  @default(false)
+  date_lecture DateTime? @db.Timestamp(6)
+  data         Json?
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  users        users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_notifications_created")
+  @@index([lu], map: "idx_notifications_lu")
+  @@index([type], map: "idx_notifications_type")
+  @@index([user_id], map: "idx_notifications_user")
+  @@index([user_id, lu, created_at], map: "idx_notifications_user_lu")
+}
+
+model parametres {
+  id          String    @id @db.VarChar(36)
+  cle         String    @unique @db.VarChar(100)
+  valeur      String?
+  type        String?   @db.VarChar(50)
+  description String?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([cle], map: "idx_parametres_cle")
+}
+
+model password_resets {
+  id         String    @id @db.VarChar(36)
+  user_id    String    @db.VarChar(36)
+  token      String    @unique @db.VarChar(255)
+  expires_at DateTime  @db.Timestamp(6)
+  utilise    Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at], map: "idx_password_resets_expires_at")
+  @@index([token], map: "idx_password_resets_token")
+}
+
+model pays {
+  id         String    @id @db.VarChar(36)
+  nom        String    @db.VarChar(100)
+  code       String    @unique @db.VarChar(3)
+  region     String?   @db.VarChar(100)
+  actif      Boolean?  @default(true)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([actif], map: "idx_pays_actif")
+  @@index([code], map: "idx_pays_code")
+}
+
+model produits {
+  id                  String            @id @db.VarChar(36)
+  categorie_id        String            @db.VarChar(36)
+  nom                 String            @db.VarChar(255)
+  slug                String            @unique @db.VarChar(255)
+  description         String?
+  description_courte  String?
+  prix                Decimal           @db.Decimal(10, 2)
+  devise              String?           @default("USD") @db.VarChar(3)
+  pays_origine        pays_enum
+  quantite_minimum    Int?              @default(1)
+  delai_livraison     String?           @db.VarChar(100)
+  poids               Decimal?          @db.Decimal(10, 2)
+  dimensions          String?           @db.VarChar(100)
+  caracteristiques    Json?
+  disponible          Boolean?          @default(true)
+  stock               Int?              @default(0)
+  nombre_vues         Int?              @default(0)
+  nombre_reservations Int?              @default(0)
+  created_at          DateTime?         @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?         @default(now()) @db.Timestamp(6)
+  categories          categories        @relation(fields: [categorie_id], references: [id], onUpdate: NoAction)
+  produits_images     produits_images[]
+  reservations        reservations[]
+
+  @@index([categorie_id], map: "idx_produits_categorie")
+  @@index([disponible], map: "idx_produits_disponible")
+  @@index([pays_origine], map: "idx_produits_pays_origine")
+  @@index([prix], map: "idx_produits_prix")
+  @@index([slug], map: "idx_produits_slug")
+}
+
+model produits_images {
+  id             String    @id @db.VarChar(36)
+  produit_id     String    @db.VarChar(36)
+  url            String    @db.VarChar(500)
+  alt_text       String?   @db.VarChar(255)
+  ordre          Int?      @default(0)
+  est_principale Boolean?  @default(false)
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  produits       produits  @relation(fields: [produit_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([produit_id], map: "idx_produits_images_produit")
+}
+
+model reservations {
+  id                 String              @id @db.VarChar(36)
+  numero_reservation String              @unique @db.VarChar(50)
+  user_id            String              @db.VarChar(36)
+  produit_id         String              @db.VarChar(36)
+  quantite           Int
+  prix_unitaire      Decimal             @db.Decimal(10, 2)
+  prix_total         Decimal             @db.Decimal(10, 2)
+  devise             String?             @default("USD") @db.VarChar(3)
+  statut             reservation_statut? @default(en_attente)
+  notes              String?
+  notes_admin        String?
+  date_confirmation  DateTime?           @db.Timestamp(6)
+  date_annulation    DateTime?           @db.Timestamp(6)
+  created_at         DateTime?           @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamp(6)
+  produits           produits            @relation(fields: [produit_id], references: [id], onUpdate: NoAction)
+  users              users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, statut, created_at], map: "idx_reservations_composite")
+  @@index([created_at], map: "idx_reservations_created")
+  @@index([numero_reservation], map: "idx_reservations_numero")
+  @@index([produit_id], map: "idx_reservations_produit")
+  @@index([statut], map: "idx_reservations_statut")
+  @@index([user_id], map: "idx_reservations_user")
+}
+
+model sessions {
+  id            String    @id @db.VarChar(36)
+  user_id       String    @db.VarChar(36)
+  token         String    @unique @db.VarChar(500)
+  refresh_token String?   @unique @db.VarChar(500)
+  ip_address    String?   @db.VarChar(45)
+  user_agent    String?
+  expires_at    DateTime  @db.Timestamp(6)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at], map: "idx_sessions_expires_at")
+  @@index([token], map: "idx_sessions_token")
+  @@index([user_id], map: "idx_sessions_user_id")
+}
+
+model tarifs_transport {
+  id               String         @id @db.VarChar(36)
+  pays_depart      pays_enum
+  pays_destination String         @db.VarChar(100)
+  mode_transport   transport_mode
+  poids_min        Decimal        @db.Decimal(10, 2)
+  poids_max        Decimal        @db.Decimal(10, 2)
+  prix_par_kg      Decimal        @db.Decimal(10, 2)
+  prix_par_m3      Decimal        @db.Decimal(10, 2)
+  delai_moyen      String?        @db.VarChar(100)
+  devise           String?        @default("USD") @db.VarChar(3)
+  actif            Boolean?       @default(true)
+  created_at       DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?      @default(now()) @db.Timestamp(6)
+
+  @@index([actif], map: "idx_tarifs_transport_actif")
+  @@index([pays_depart, pays_destination], map: "idx_tarifs_transport_depart_destination")
+  @@index([mode_transport], map: "idx_tarifs_transport_mode")
+}
+
+model transport_documents {
+  id           String     @id @db.VarChar(36)
+  transport_id String     @db.VarChar(36)
+  nom          String     @db.VarChar(255)
+  type         String?    @db.VarChar(100)
+  url          String     @db.VarChar(500)
+  taille       Int?
+  uploaded_par String?    @db.VarChar(36)
+  created_at   DateTime?  @default(now()) @db.Timestamp(6)
+  transports   transports @relation(fields: [transport_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users        users?     @relation(fields: [uploaded_par], references: [id], onUpdate: NoAction)
+
+  @@index([transport_id], map: "idx_transport_documents_transport")
+}
+
+model transport_timeline {
+  id             String     @id @db.VarChar(36)
+  transport_id   String     @db.VarChar(36)
+  etape          String     @db.VarChar(100)
+  description    String?
+  statut         String?    @db.VarChar(50)
+  localisation   String?    @db.VarChar(255)
+  date_evenement DateTime   @db.Timestamp(6)
+  cree_par       String?    @db.VarChar(36)
+  created_at     DateTime?  @default(now()) @db.Timestamp(6)
+  users          users?     @relation(fields: [cree_par], references: [id], onUpdate: NoAction)
+  transports     transports @relation(fields: [transport_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([date_evenement], map: "idx_transport_timeline_date")
+  @@index([transport_id], map: "idx_transport_timeline_transport")
+}
+
+model transports {
+  id                   String                @id @db.VarChar(36)
+  numero_transport     String                @unique @db.VarChar(50)
+  user_id              String                @db.VarChar(36)
+  pays_depart          pays_enum
+  pays_destination     String                @db.VarChar(100)
+  ville_destination    String?               @db.VarChar(100)
+  type_marchandise     String                @db.VarChar(255)
+  description          String?
+  poids                Decimal               @db.Decimal(10, 2)
+  volume               Decimal               @db.Decimal(10, 2)
+  mode_transport       transport_mode
+  prix_estime          Decimal?              @db.Decimal(10, 2)
+  prix_final           Decimal?              @db.Decimal(10, 2)
+  devise               String?               @default("USD") @db.VarChar(3)
+  delai_estime         String?               @db.VarChar(100)
+  statut               transport_statut?     @default(en_attente)
+  date_depart          DateTime?             @db.Timestamp(6)
+  date_arrivee_estimee DateTime?             @db.Timestamp(6)
+  date_arrivee_reelle  DateTime?             @db.Timestamp(6)
+  numero_suivi         String?               @db.VarChar(100)
+  compagnie_transport  String?               @db.VarChar(255)
+  notes_client         String?
+  notes_admin          String?
+  created_at           DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?             @default(now()) @db.Timestamp(6)
+  transport_documents  transport_documents[]
+  transport_timeline   transport_timeline[]
+  users                users                 @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, statut, created_at], map: "idx_transports_composite")
+  @@index([created_at], map: "idx_transports_created")
+  @@index([numero_transport], map: "idx_transports_numero")
+  @@index([pays_depart], map: "idx_transports_pays_depart")
+  @@index([pays_destination], map: "idx_transports_pays_destination")
+  @@index([statut], map: "idx_transports_statut")
+  @@index([user_id], map: "idx_transports_user")
+}
+
+model users {
+  id                                                               String                    @id @db.VarChar(36)
+  nom                                                              String                    @db.VarChar(100)
+  prenom                                                           String                    @db.VarChar(100)
+  email                                                            String                    @unique @db.VarChar(255)
+  telephone                                                        String?                   @db.VarChar(20)
+  pays                                                             String?                   @db.VarChar(100)
+  adresse                                                          String?
+  mot_de_passe_hash                                                String                    @db.VarChar(255)
+  role                                                             user_role?                @default(client)
+  statut                                                           user_statut?              @default(actif)
+  date_inscription                                                 DateTime?                 @default(now()) @db.Timestamp(6)
+  date_derniere_connexion                                          DateTime?                 @db.Timestamp(6)
+  created_at                                                       DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at                                                       DateTime?                 @default(now()) @db.Timestamp(6)
+  contacts                                                         contacts[]
+  conversations_conversations_assigne_aTousers                     conversations[]           @relation("conversations_assigne_aTousers")
+  conversations_conversations_user_idTousers                       conversations[]           @relation("conversations_user_idTousers")
+  demandes_accompagnement_demandes_accompagnement_assigne_aTousers demandes_accompagnement[] @relation("demandes_accompagnement_assigne_aTousers")
+  demandes_accompagnement_demandes_accompagnement_user_idTousers   demandes_accompagnement[] @relation("demandes_accompagnement_user_idTousers")
+  devis_devis_traite_parTousers                                    devis[]                   @relation("devis_traite_parTousers")
+  devis_devis_user_idTousers                                       devis[]                   @relation("devis_user_idTousers")
+  logs_activite                                                    logs_activite[]
+  messages                                                         messages[]
+  notifications                                                    notifications[]
+  password_resets                                                  password_resets[]
+  reservations                                                     reservations[]
+  sessions                                                         sessions[]
+  transport_documents                                              transport_documents[]
+  transport_timeline                                               transport_timeline[]
+  transports                                                       transports[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([role], map: "idx_users_role")
+  @@index([statut], map: "idx_users_statut")
+}
+
+enum conversation_statut {
+  ouvert
+  en_cours
+  resolu
+  ferme
+}
+
+enum demande_accompagnement_statut {
+  en_attente
+  en_cours
+  acceptee
+  refusee
+  terminee
+}
+
+enum devis_statut {
+  en_attente
+  en_cours
+  envoye
+  accepte
+  refuse
+}
+
+enum devis_type {
+  achat
+  transport
+  accompagnement
+}
+
+enum pays_enum {
+  Chine
+  Duba_ @map("Dubaï")
+}
+
+enum priorite {
+  basse
+  normale
+  haute
+  urgente
+}
+
+enum reservation_statut {
+  en_attente
+  confirmee
+  traitee
+  annulee
+}
+
+enum transport_mode {
+  maritime
+  aerien
+}
+
+enum transport_statut {
+  en_attente
+  confirme
+  marchandise_recue
+  en_transit
+  arrive
+  livre
+  annule
+}
+
+enum user_role {
+  client
+  admin
+}
+
+enum user_statut {
+  actif
+  inactif
+  suspendu
+}
