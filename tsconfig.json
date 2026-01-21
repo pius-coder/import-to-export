@@ -19,7 +19,7 @@
       }
     ],
     "paths": {
-      "@/prisma": ["./src/adapter/prisma/index"],
+      "@/prisma": ["./src/adapter/prisma/client"],
       "@/prisma/*": ["./src/adapter/prisma/*"],
       "@/services/*": ["./src/services/*"],
       "@/*": ["./src/*"],
